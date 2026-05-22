@@ -173,3 +173,4 @@ PipVault is not trying to be a broker, analytics platform, or social trading too
 
 It is a focused journal: clean inputs, useful metrics, screenshot context, and enough structure to help you review your trading behavior honestly.
 
+Thank You
