@@ -1,9 +1,24 @@
 import { toNumber } from './calculations.js';
 
 const SEARCH_FIELDS = ['pair', 'side', 'date', 'session', 'emotion', 'notes'];
+const BACKTEST_SEARCH_FIELDS = [
+  'strategy',
+  'pair',
+  'side',
+  'date',
+  'session',
+  'setupGrade',
+  'followedRules',
+  'mistake',
+  'notes',
+];
 
 export function getUniquePairs(trades) {
   return [...new Set(trades.map((trade) => trade.pair).filter(Boolean))].sort();
+}
+
+export function getUniqueStrategies(backtests) {
+  return [...new Set(backtests.map((trade) => trade.strategy).filter(Boolean))].sort();
 }
 
 export function filterTrades(trades, filters) {
@@ -37,4 +52,21 @@ export function sortTrades(trades, sortConfig) {
   });
 
   return sorted;
+}
+
+export function filterBacktests(backtests, filters) {
+  const search = filters.search.trim().toLowerCase();
+
+  return backtests.filter((trade) => {
+    const matchesSearch =
+      !search ||
+      BACKTEST_SEARCH_FIELDS.some((field) => String(trade[field] || '').toLowerCase().includes(search));
+    const matchesStrategy = filters.strategy === 'All' || trade.strategy === filters.strategy;
+    const matchesSide = filters.side === 'All' || trade.side === filters.side;
+    const matchesPair = filters.pair === 'All' || trade.pair === filters.pair;
+    const matchesSetupGrade = filters.setupGrade === 'All' || trade.setupGrade === filters.setupGrade;
+    const matchesFollowedRules = filters.followedRules === 'All' || trade.followedRules === filters.followedRules;
+
+    return matchesSearch && matchesStrategy && matchesSide && matchesPair && matchesSetupGrade && matchesFollowedRules;
+  });
 }

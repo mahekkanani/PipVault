@@ -19,3 +19,13 @@ export function validateTrade(values) {
 
   return errors;
 }
+
+export function validateBacktest(values) {
+  const errors = validateTrade(values);
+
+  if (!String(values.strategy ?? '').trim()) {
+    errors.strategy = 'Required';
+  }
+
+  return errors;
+}

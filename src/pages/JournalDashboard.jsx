@@ -62,8 +62,8 @@ export default function JournalDashboard() {
   const profitTone = stats.totalProfitLoss > 0 ? 'profit' : stats.totalProfitLoss < 0 ? 'loss' : 'neutral';
 
   return (
-    <main className="relative min-h-screen px-4 py-6 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-[1600px] space-y-6">
+    <>
+      <div className="space-y-6">
         <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-sm font-medium uppercase tracking-[0.24em] text-cyan-200">PipVault</p>
@@ -133,6 +133,6 @@ export default function JournalDashboard() {
       ) : null}
 
       <ScreenshotModal screenshot={previewScreenshot} onClose={() => setPreviewScreenshot('')} />
-    </main>
+    </>
   );
 }
