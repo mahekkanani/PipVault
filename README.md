@@ -35,6 +35,14 @@ It is made for personal use, fast review sessions, and clean decision tracking.
 - Green styling for profitable trades
 - Red styling for losing trades
 - Responsive layout for desktop and mobile
+- Dedicated Journal for Backtest workspace
+- Manual historical/replay backtest logging
+- Strategy-based backtest grouping
+- Backtest profitability and process metrics:
+  - Profit factor
+  - Expectancy
+  - Average RR
+  - Rule-following rate
 
 ## Trade Table
 
@@ -46,6 +54,37 @@ Captured Pips -> RR Ratio -> Emotion -> Profit/Loss -> Notes
 ```
 
 `Lot Size` and `Session` are still captured in the form and saved with each trade, but they are hidden from the main table to keep the review view clean.
+
+## Journal for Backtest
+
+The Backtest Journal is a separate workspace for manually logging historical or replay trades. It is designed to answer one simple question: is this strategy actually profitable when tested honestly?
+
+Backtests are grouped by strategy and track both performance and process quality:
+
+- Strategy name
+- Pair and Buy/Sell direction
+- Entry, exit, take profit, and stop loss
+- Captured pips
+- Profit/loss
+- Risk-to-reward ratio
+- Session
+- Setup grade
+- Whether rules were followed
+- Mistake type
+- Notes and screenshots
+
+The backtest dashboard shows:
+
+- Total backtests
+- Win rate
+- Net profit/loss
+- Total pips
+- Profit factor
+- Expectancy
+- Average RR
+- Rule-following rate
+
+Backtest data is separate from live journal data, so testing a strategy will not change live trade stats.
 
 ## Tech Stack
 
@@ -145,6 +184,35 @@ Trades are saved under this browser storage key:
 
 ```text
 trading-journal:trades
+```
+
+Backtests are saved under this browser storage key:
+
+```text
+trading-journal:backtests
+```
+
+Each backtest stores:
+
+```text
+id
+strategy
+pair
+side
+entry
+takeProfit
+stopLoss
+exit
+capturedPips
+profitLoss
+rrRatio
+date
+session
+setupGrade
+followedRules
+mistake
+notes
+screenshot
 ```
 
 ## Local-First Notes
