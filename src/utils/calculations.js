@@ -38,3 +38,28 @@ export function calculateStats(trades) {
     worstTrade,
   };
 }
+
+export function calculateBacktestStats(backtests) {
+  const totalBacktests = backtests.length;
+  const winningTrades = backtests.filter((trade) => toNumber(trade.profitLoss) > 0);
+  const losingTrades = backtests.filter((trade) => toNumber(trade.profitLoss) < 0);
+  const totalProfitLoss = backtests.reduce((sum, trade) => sum + toNumber(trade.profitLoss), 0);
+  const totalPips = backtests.reduce((sum, trade) => sum + toNumber(trade.capturedPips), 0);
+  const totalWins = winningTrades.reduce((sum, trade) => sum + toNumber(trade.profitLoss), 0);
+  const totalLosses = Math.abs(losingTrades.reduce((sum, trade) => sum + toNumber(trade.profitLoss), 0));
+  const averageRr = totalBacktests
+    ? backtests.reduce((sum, trade) => sum + toNumber(trade.rrRatio), 0) / totalBacktests
+    : 0;
+  const followedRulesCount = backtests.filter((trade) => trade.followedRules === 'Yes').length;
+
+  return {
+    totalBacktests,
+    winRate: totalBacktests ? (winningTrades.length / totalBacktests) * 100 : 0,
+    totalProfitLoss,
+    totalPips,
+    profitFactor: totalLosses ? totalWins / totalLosses : totalWins ? totalWins : 0,
+    expectancy: totalBacktests ? totalProfitLoss / totalBacktests : 0,
+    averageRr,
+    ruleFollowingRate: totalBacktests ? (followedRulesCount / totalBacktests) * 100 : 0,
+  };
+}
