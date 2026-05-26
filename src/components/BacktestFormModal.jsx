@@ -38,6 +38,7 @@ export default function BacktestFormModal({ backtest, onClose, onSave }) {
   const [values, setValues] = useState(() => ({ ...emptyBacktest, ...backtest }));
   const [errors, setErrors] = useState({});
   const [fileError, setFileError] = useState('');
+  const [screenshotFile, setScreenshotFile] = useState(null);
 
   const rrRatio = useMemo(
     () => calculateRiskReward(values.entry, values.stopLoss, values.takeProfit),
@@ -60,6 +61,7 @@ export default function BacktestFormModal({ backtest, onClose, onSave }) {
 
     try {
       const screenshot = await readFileAsDataUrl(file);
+      setScreenshotFile(file);
       updateField('screenshot', screenshot);
       setFileError('');
     } catch (error) {
@@ -87,6 +89,7 @@ export default function BacktestFormModal({ backtest, onClose, onSave }) {
       profitLoss: Number(values.profitLoss),
       rrRatio,
       notes: values.notes.trim(),
+      screenshotFile,
     });
   }
 

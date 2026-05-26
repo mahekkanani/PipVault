@@ -1,22 +1,26 @@
-import { useMemo, useState } from 'react';
-import { Activity, BadgeDollarSign, BarChart3, Flame, Target, Trophy } from 'lucide-react';
+import { useMemo, useRef, useState } from 'react';
+import { Activity, BadgeDollarSign, BarChart3, Download, Flame, Loader2, Target, Trophy, Upload } from 'lucide-react';
 import DashboardCard from '../components/DashboardCard.jsx';
+import Button from '../components/Button.jsx';
 import ScreenshotModal from '../components/ScreenshotModal.jsx';
 import TradeFilters from '../components/TradeFilters.jsx';
 import TradeFormModal from '../components/TradeFormModal.jsx';
 import TradesTable from '../components/TradesTable.jsx';
-import { useLocalStorageTrades } from '../hooks/useLocalStorageTrades.js';
+import { useTrades } from '../hooks/useTrades.js';
 import { calculateStats } from '../utils/calculations.js';
+import { exportCSV, exportJSON, importJSON } from '../utils/exportImport.js';
 import { filterTrades, getUniquePairs, sortTrades } from '../utils/filters.js';
 import { formatCurrency, formatNumber, formatPercent } from '../utils/formatters.js';
 
 export default function JournalDashboard() {
-  const { trades, storageError, addTrade, updateTrade, deleteTrade } = useLocalStorageTrades();
+  const { trades, loading, error, addTrade, updateTrade, deleteTrade } = useTrades();
   const [filters, setFilters] = useState({ search: '', side: 'All', pair: 'All' });
   const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
   const [editingTrade, setEditingTrade] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [previewScreenshot, setPreviewScreenshot] = useState('');
+  const [importStatus, setImportStatus] = useState('');
+  const fileInputRef = useRef(null);
 
   const stats = useMemo(() => calculateStats(trades), [trades]);
   const pairs = useMemo(() => getUniquePairs(trades), [trades]);
@@ -37,15 +41,30 @@ export default function JournalDashboard() {
     setIsFormOpen(true);
   }
 
-  function handleSave(trade) {
-    if (editingTrade) {
-      updateTrade(trade);
-    } else {
-      addTrade(trade);
-    }
+  async function handleSave(trade) {
+    const saved = editingTrade ? await updateTrade(trade.id, trade) : await addTrade(trade);
+
+    if (!saved) return;
 
     setIsFormOpen(false);
     setEditingTrade(null);
+  }
+
+  async function handleImport(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setImportStatus('');
+
+    try {
+      const count = await importJSON(file, addTrade);
+      setImportStatus(`Imported ${count} trades.`);
+    } catch (importError) {
+      console.error('Unable to import trades:', importError);
+      setImportStatus(importError.message || 'Unable to import trades.');
+    } finally {
+      event.target.value = '';
+    }
   }
 
   function handleEdit(trade) {
@@ -53,10 +72,31 @@ export default function JournalDashboard() {
     setIsFormOpen(true);
   }
 
-  function handleDelete(id) {
+  async function handleDelete(id) {
     if (window.confirm('Delete this trade? This cannot be undone.')) {
-      deleteTrade(id);
+      await deleteTrade(id);
     }
+  }
+
+  function renderStatus() {
+    if (loading) {
+      return (
+        <div className="flex items-center gap-3 rounded-lg border border-cyan-400/15 bg-slate-950/80 px-4 py-3 text-sm text-cyan-100">
+          <Loader2 className="animate-spin" size={18} />
+          Loading trades
+        </div>
+      );
+    }
+
+    if (error) {
+      return <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">{error}</div>;
+    }
+
+    if (importStatus) {
+      return <div className="rounded-lg border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100">{importStatus}</div>;
+    }
+
+    return null;
   }
 
   const profitTone = stats.totalProfitLoss > 0 ? 'profit' : stats.totalProfitLoss < 0 ? 'loss' : 'neutral';
@@ -76,11 +116,7 @@ export default function JournalDashboard() {
           </div>
         </header>
 
-        {storageError ? (
-          <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-            {storageError}
-          </div>
-        ) : null}
+        {renderStatus()}
 
         <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
           <DashboardCard label="Total Trades" value={stats.totalTrades} detail="All recorded setups" icon={Activity} tone="violet" />
@@ -109,7 +145,26 @@ export default function JournalDashboard() {
           />
         </section>
 
-        <TradeFilters filters={filters} onFiltersChange={setFilters} pairs={pairs} onAddTrade={openAddForm} />
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-start">
+          <div className="flex-1">
+            <TradeFilters filters={filters} onFiltersChange={setFilters} pairs={pairs} onAddTrade={openAddForm} />
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3 xl:w-auto">
+            <Button onClick={() => exportJSON(trades)} type="button" variant="secondary">
+              <Download size={18} />
+              Export JSON
+            </Button>
+            <Button onClick={() => exportCSV(trades)} type="button" variant="secondary">
+              <Download size={18} />
+              Export CSV
+            </Button>
+            <Button onClick={() => fileInputRef.current?.click()} type="button" variant="secondary">
+              <Upload size={18} />
+              Import
+            </Button>
+            <input ref={fileInputRef} className="sr-only" accept="application/json,.json" type="file" onChange={handleImport} />
+          </div>
+        </div>
 
         <TradesTable
           trades={visibleTrades}

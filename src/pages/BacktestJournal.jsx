@@ -1,17 +1,17 @@
 import { useMemo, useState } from 'react';
-import { Activity, BadgeDollarSign, BarChart3, ClipboardCheck, Gauge, Percent, Target, TrendingUp } from 'lucide-react';
+import { Activity, BadgeDollarSign, BarChart3, ClipboardCheck, Gauge, Loader2, Percent, Target, TrendingUp } from 'lucide-react';
 import BacktestFilters from '../components/BacktestFilters.jsx';
 import BacktestFormModal from '../components/BacktestFormModal.jsx';
 import BacktestsTable from '../components/BacktestsTable.jsx';
 import DashboardCard from '../components/DashboardCard.jsx';
 import ScreenshotModal from '../components/ScreenshotModal.jsx';
-import { useLocalStorageBacktests } from '../hooks/useLocalStorageBacktests.js';
+import { useBacktests } from '../hooks/useBacktests.js';
 import { calculateBacktestStats } from '../utils/calculations.js';
 import { filterBacktests, getUniquePairs, getUniqueStrategies, sortTrades } from '../utils/filters.js';
 import { formatCurrency, formatNumber, formatPercent } from '../utils/formatters.js';
 
 export default function BacktestJournal() {
-  const { backtests, storageError, addBacktest, updateBacktest, deleteBacktest } = useLocalStorageBacktests();
+  const { backtests, loading, error, addBacktest, updateBacktest, deleteBacktest } = useBacktests();
   const [filters, setFilters] = useState({
     search: '',
     strategy: 'All',
@@ -45,12 +45,10 @@ export default function BacktestJournal() {
     setIsFormOpen(true);
   }
 
-  function handleSave(backtest) {
-    if (editingBacktest) {
-      updateBacktest(backtest);
-    } else {
-      addBacktest(backtest);
-    }
+  async function handleSave(backtest) {
+    const saved = editingBacktest ? await updateBacktest(backtest.id, backtest) : await addBacktest(backtest);
+
+    if (!saved) return;
 
     setIsFormOpen(false);
     setEditingBacktest(null);
@@ -61,10 +59,27 @@ export default function BacktestJournal() {
     setIsFormOpen(true);
   }
 
-  function handleDelete(id) {
+  async function handleDelete(id) {
     if (window.confirm('Delete this backtest? This cannot be undone.')) {
-      deleteBacktest(id);
+      await deleteBacktest(id);
     }
+  }
+
+  function renderStatus() {
+    if (loading) {
+      return (
+        <div className="flex items-center gap-3 rounded-lg border border-cyan-400/15 bg-slate-950/80 px-4 py-3 text-sm text-cyan-100">
+          <Loader2 className="animate-spin" size={18} />
+          Loading backtests
+        </div>
+      );
+    }
+
+    if (error) {
+      return <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">{error}</div>;
+    }
+
+    return null;
   }
 
   const profitTone = stats.totalProfitLoss > 0 ? 'profit' : stats.totalProfitLoss < 0 ? 'loss' : 'neutral';
@@ -84,11 +99,7 @@ export default function BacktestJournal() {
           </div>
         </header>
 
-        {storageError ? (
-          <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-            {storageError}
-          </div>
-        ) : null}
+        {renderStatus()}
 
         <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <DashboardCard label="Total Backtests" value={stats.totalBacktests} detail="Historical/replay trades" icon={Activity} tone="violet" />
