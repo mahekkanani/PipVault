@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { BarChart3, BookOpen, Loader2 } from 'lucide-react';
+import { BarChart3, BookOpen, Loader2, TrendingUp } from 'lucide-react';
+import AnalyticsPage from './pages/AnalyticsPage.jsx';
 import JournalDashboard from './pages/JournalDashboard.jsx';
 import BacktestJournal from './pages/BacktestJournal.jsx';
 import AuthPage from './pages/AuthPage.jsx';
@@ -12,8 +13,15 @@ export default function App() {
   const [activeView, setActiveView] = useState('live');
   const views = [
     { id: 'live', label: 'Live Journal', icon: BookOpen },
+    { id: 'analytics', label: 'Analytics', icon: TrendingUp },
     { id: 'backtest', label: 'Backtest Journal', icon: BarChart3 },
   ];
+
+  function renderActiveView() {
+    if (activeView === 'analytics') return <AnalyticsPage />;
+    if (activeView === 'backtest') return <BacktestJournal />;
+    return <JournalDashboard />;
+  }
 
   if (loading) {
     return (
@@ -60,7 +68,7 @@ export default function App() {
             <UserMenu />
           </div>
 
-          {activeView === 'live' ? <JournalDashboard /> : <BacktestJournal />}
+          {renderActiveView()}
         </div>
       </main>
     </ErrorBoundary>
