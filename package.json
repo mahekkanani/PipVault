@@ -8,9 +8,11 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.106.2",
     "@vitejs/plugin-react": "^4.3.4",
+    "date-fns": "^4.4.0",
     "lucide-react": "^0.468.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "recharts": "^3.8.1",
     "vite": "^6.0.5"
   },
   "devDependencies": {
